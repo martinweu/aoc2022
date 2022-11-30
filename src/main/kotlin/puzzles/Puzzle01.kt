@@ -19,7 +19,7 @@ class Puzzle00P1 : Puzzle() {
 
 class Puzzle00P2 : Puzzle() {
     override fun solve(lines: List<String>): String {
-        TODO("Part 2 is not yet implemented")
+        TODO("Puzzle 0 Part 2 is not yet implemented")
     }
 
 }
