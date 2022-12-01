@@ -2,24 +2,43 @@ package puzzles
 
 import Puzzle
 
-class Puzzle00P1 : Puzzle() {
-    override fun solve(lines : List<String>): String {
-        var counter = -1
-        var lastDepth = -1
+class Puzzle01P1 : Puzzle() {
+    override fun solve(lines: List<String>): String {
+
+        var currentElf = 0
+        var maxElf = -1
         for (line in lines) {
-            val currentDepth = line.toInt()
-            if (currentDepth > lastDepth) {
-                counter++
+            if (line.isBlank()) {
+                if (currentElf > maxElf) {
+                    maxElf = currentElf
+                }
+                currentElf = 0
+            } else {
+                currentElf += line.toInt()
             }
-            lastDepth = currentDepth
         }
-        return counter.toString()
+        return maxElf.toString()
     }
 }
 
-class Puzzle00P2 : Puzzle() {
+class Puzzle01P2 : Puzzle() {
     override fun solve(lines: List<String>): String {
-        TODO("Puzzle 0 Part 2 is not yet implemented")
+
+        val elvesCalories = mutableListOf<Int>()
+
+        var currentElve = 0
+
+        for (line in lines) {
+            if (line.isBlank()) {
+                elvesCalories.add(currentElve)
+                currentElve = 0
+            } else {
+                currentElve += line.toInt()
+            }
+        }
+        elvesCalories.add(currentElve)
+
+        return elvesCalories.sortedDescending().take(3).sum().toString()
     }
 
 }
