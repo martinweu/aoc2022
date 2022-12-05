@@ -2,7 +2,7 @@ import org.apache.commons.io.FileUtils
 import puzzles.*
 import java.io.File
 
-val PUZZLE = Puzzle04P2()
+val PUZZLE = Puzzle05P2()
 
 fun main() {
     runFile("example")
@@ -35,8 +35,9 @@ fun computeAndCheck(inputFile: File, checkFile: File?) {
     if (checkFile == null) {
         System.err.println("Unchecked Solution for ${inputFile.name} using ${PUZZLE.name} is $foundSolution")
     } else {
-        if (checkFile.readLines()[0] != foundSolution) {
-            throw RuntimeException("Wrong Solution for ${inputFile.name} using ${PUZZLE.name} with $foundSolution")
+        val expectedSolution = checkFile.readLines()[0]
+        if (expectedSolution != foundSolution) {
+            System.err.println("Wrong Solution for ${inputFile.name} using ${PUZZLE.name} with $foundSolution, expected is $expectedSolution")
         }
         else{
             println("Correct Solution for ${inputFile.name} using ${PUZZLE.name} is $foundSolution")
