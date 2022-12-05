@@ -5,11 +5,12 @@ import Puzzle
 class Puzzle04P1 : Puzzle() {
     override fun solve(lines: List<String>): String {
         var fullyContainsCounter = 0
+        val regex = Regex("""(\d+)-(\d+),(\d+)-(\d+)""")
 
         for(line in lines){
-            val parts = line.split(',')
-            val firstElf = Area.fromString(parts[0])
-            val secondElf = Area.fromString(parts[1])
+            val groups = regex.find(line)!!.groups.map { it!!.value.toInt() }
+            val firstElf = Area(groups[0], groups[1])
+            val secondElf = Area(groups[0], groups[1])
             val fullIntersect = firstElf.isFullyContained(secondElf) || secondElf.isFullyContained(firstElf)
             if(fullIntersect){
                 fullyContainsCounter++
