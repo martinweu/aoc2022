@@ -5,9 +5,9 @@ abstract class Puzzle {
     private val part: String
 
     init {
-        val solverName = this.javaClass.name
-        this.puzzle = solverName.takeLast(4).take(2)
-        this.part = solverName.takeLast(2)
+        val solverClassName = this.javaClass.name.split(".").last()
+        this.puzzle = solverClassName.substring("Puzzle".length, solverClassName.length-2)
+        this.part = solverClassName.takeLast(2)
     }
 
     val name get() = "Puzzle: $puzzle Part: $part"
