@@ -2,48 +2,106 @@ package puzzles
 
 import Puzzle
 
-class Puzzle14P1 : Puzzle() {
-    override fun solve(lines: List<String>): String {
-        val rockLines = Puzzle14.parseRockLines(lines)
-        val sandSource = Puzzle14.Vector2D(500,0)
 
-        val lowestRock = rockLines.maxOf { Math.max(it.a.y, it.b.y) }
-
-        val rockSet = Puzzle14.computeRockSet(rockLines)
-
-        val sandSet = mutableSetOf<Puzzle14.Vector2D>()
-
-
-        while(true)
-        {
-            var currentSand = sandSource
-            while(currentSand.y < lowestRock) {
-                var couldFall = false
-                for(fall in Puzzle14.SandMoves) {
-                    val newSandPosition = currentSand + fall
-                    if(!rockSet.contains(newSandPosition) && !sandSet.contains(newSandPosition) ) {
-                        currentSand = newSandPosition
-                        couldFall = true
-                        break;
-                    }
-                }
-                if(!couldFall) {
-                    break;
-                }
-            }
-            if(currentSand.y >= lowestRock) {
-                break;
-            }
-            sandSet.add(currentSand)
-
-        }
-        return sandSet.size.toString()
-    }
-
-}
 
 class Puzzle14
 {
+
+    class Part1 : Puzzle() {
+        override fun solve(lines: List<String>): String {
+            val rockLines = Puzzle14.parseRockLines(lines)
+            val sandSource = Puzzle14.Vector2D(500,0)
+
+            val lowestRock = rockLines.maxOf { Math.max(it.a.y, it.b.y) }
+
+            val rockSet = Puzzle14.computeRockSet(rockLines)
+
+            val sandSet = mutableSetOf<Puzzle14.Vector2D>()
+
+
+            while(true)
+            {
+                var currentSand = sandSource
+                while(currentSand.y < lowestRock) {
+                    var couldFall = false
+                    for(fall in Puzzle14.SandMoves) {
+                        val newSandPosition = currentSand + fall
+                        if(!rockSet.contains(newSandPosition) && !sandSet.contains(newSandPosition) ) {
+                            currentSand = newSandPosition
+                            couldFall = true
+                            break;
+                        }
+                    }
+                    if(!couldFall) {
+                        break;
+                    }
+                }
+                if(currentSand.y >= lowestRock) {
+                    break;
+                }
+                sandSet.add(currentSand)
+
+            }
+            return sandSet.size.toString()
+        }
+
+    }
+
+    class Part2 : Puzzle() {
+        override fun solve(lines: List<String>): String {
+            val rockLines = Puzzle14.parseRockLines(lines)
+            val sandSource = Puzzle14.Vector2D(500,0)
+            val lastRockLine = getLastRockLine(rockLines, sandSource)
+            rockLines.add(lastRockLine)
+            val lowestRock = rockLines.maxOf { Math.max(it.a.y, it.b.y) }
+
+            val rockSet = Puzzle14.computeRockSet(rockLines)
+
+            val sandSet = mutableSetOf<Puzzle14.Vector2D>()
+
+
+            while(true)
+            {
+                var currentSand = sandSource
+                while(currentSand.y < lowestRock) {
+                    var couldFall = false
+                    for(fall in Puzzle14.SandMoves) {
+                        val newSandPosition = currentSand + fall
+                        if(!rockSet.contains(newSandPosition) && !sandSet.contains(newSandPosition) ) {
+                            currentSand = newSandPosition
+                            couldFall = true
+                            break;
+                        }
+                    }
+                    if(!couldFall) {
+                        break;
+                    }
+                }
+                sandSet.add(currentSand)
+                if(currentSand == sandSource) {
+                    break;
+                }
+            }
+            return sandSet.size.toString()
+        }
+
+
+        private fun getLastRockLine(
+            rockLines: MutableList<Puzzle14.RockLine>,
+            sandSource: Puzzle14.Vector2D
+        ): Puzzle14.RockLine {
+            val lowestRock = rockLines.maxOf { Math.max(it.a.y, it.b.y) } + 2
+            val leftMostRock = sandSource.x - (lowestRock) - 10
+            val rightMostRock = sandSource.x + (lowestRock) + 10
+
+            val lastRockLine = Puzzle14.RockLine(
+                Puzzle14.Vector2D(leftMostRock - 10, lowestRock),
+                Puzzle14.Vector2D(rightMostRock + 10, lowestRock)
+            )
+            return lastRockLine
+        }
+
+    }
 
     data class RockLine(val a: Vector2D, val b: Vector2D)
     data class Vector2D(val x: Int, val y: Int) {
@@ -113,58 +171,3 @@ class Puzzle14
     }
 }
 
-class Puzzle14P2 : Puzzle() {
-    override fun solve(lines: List<String>): String {
-        val rockLines = Puzzle14.parseRockLines(lines)
-        val sandSource = Puzzle14.Vector2D(500,0)
-        val lastRockLine = getLastRockLine(rockLines, sandSource)
-        rockLines.add(lastRockLine)
-        val lowestRock = rockLines.maxOf { Math.max(it.a.y, it.b.y) }
-
-        val rockSet = Puzzle14.computeRockSet(rockLines)
-
-        val sandSet = mutableSetOf<Puzzle14.Vector2D>()
-
-
-        while(true)
-        {
-            var currentSand = sandSource
-            while(currentSand.y < lowestRock) {
-                var couldFall = false
-                for(fall in Puzzle14.SandMoves) {
-                    val newSandPosition = currentSand + fall
-                    if(!rockSet.contains(newSandPosition) && !sandSet.contains(newSandPosition) ) {
-                        currentSand = newSandPosition
-                        couldFall = true
-                        break;
-                    }
-                }
-                if(!couldFall) {
-                    break;
-                }
-            }
-            sandSet.add(currentSand)
-            if(currentSand == sandSource) {
-                break;
-            }
-        }
-        return sandSet.size.toString()
-    }
-
-
-    private fun getLastRockLine(
-        rockLines: MutableList<Puzzle14.RockLine>,
-        sandSource: Puzzle14.Vector2D
-    ): Puzzle14.RockLine {
-        val lowestRock = rockLines.maxOf { Math.max(it.a.y, it.b.y) } + 2
-        val leftMostRock = sandSource.x - (lowestRock) - 10
-        val rightMostRock = sandSource.x + (lowestRock) + 10
-
-        val lastRockLine = Puzzle14.RockLine(
-            Puzzle14.Vector2D(leftMostRock - 10, lowestRock),
-            Puzzle14.Vector2D(rightMostRock + 10, lowestRock)
-        )
-        return lastRockLine
-    }
-
-}

@@ -23,7 +23,7 @@ class Puzzle12 {
 
         val navigateableMap = createNavigatableMap(cellMap)
 
-        val mapMinimalDistance = mutableMapOf<puzzles.Vector2D, Int>()
+        val mapMinimalDistance = mutableMapOf<Vector2D, Int>()
 
         val states = PriorityQueue<GameState>()
         if (level2) {
