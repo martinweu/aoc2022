@@ -79,63 +79,122 @@ class Puzzle16 {
         override fun solve(lines: List<String>): String {
             val valveMap = parseValves(lines)
 
-            val queue = PriorityQueue<State2>()
             val aa = valveMap.getValue("AA")
-            queue.add(State2(setOf(aa), emptySet(), 0, 26))
-            val s = shortestPath(queue, valveMap)
+            val relevantTravelTimes = calculateTravelTimes(valveMap, aa)
+
+            val queue = PriorityQueue<State3>()
+//            queue.add(State3(setOf(Mission(aa,26), Mission(aa,26)), emptySet(), 0, 26))
+            queue.add(State3(setOf(Mission(aa, 30)), emptySet(), 0, 30))
+            val s = shortestPath2(queue, relevantTravelTimes)
 
             return s.toString()
         }
 
-
-        class MyPriorityQueue<T : MyPriorityQueue.Companion.Element<K>, K> :
-            Collection<T> {
-            val queue: PriorityQueue<T> = PriorityQueue<T>()
-            val stateScores = mutableMapOf<K, MutableSet<T>>()
-
-            fun add(t: T) {
-                val currentScores = stateScores[t.key] ?: mutableSetOf()
-                currentScores.removeIf { t.isGreaterThanWithinSameKey(it) }
-                if (currentScores.all { !it.isGreaterThanWithinSameKey(t) }) {
-                    currentScores.add(t)
-                    queue.add(t)
+        private fun calculateTravelTimes(valveMap: Map<String, Valve>, start: Valve): Map<Valve, Map<Valve, Int>> {
+            val travelTime = mutableMapOf<Valve, MutableMap<Valve, Int>>()
+            var run = true
+            while (run) {
+                run = false
+                valveMap.values.forEach { a ->
+                    valveMap.values.forEach { b ->
+                        val oldT = travelTime[a]?.get(b)
+                        if (oldT == null && a == b) {
+                            travelTime.computeIfAbsent(a) { mutableMapOf() }.set(b, 0)
+                            run = true
+                        } else {
+                            val minAtoB =
+                                a.connections.map { valveMap.getValue(it) }
+                                    .mapNotNull { travelTime.get(it)?.get(b) }
+                                    .minOrNull()
+                            if (minAtoB != null && (oldT == null || oldT > minAtoB + 1)) {
+                                travelTime[a]?.set(b, minAtoB + 1)
+                                travelTime[b]?.set(a, minAtoB + 1)
+                                run = true
+                            }
+                        }
+                    }
+                }
+                valveMap.values.forEach {
                 }
             }
-
-            fun pop(): T {
-                val a = queue.first()
-                //stateScores.getValue(a.key).remove(a)
-                queue.remove(a)
-                return a
-            }
-
-            companion object {
-                interface Element<K> {
-                    val key: K
-                    fun isGreaterThanWithinSameKey(other: Element<K>): Boolean
-                }
-            }
-
-            override val size: Int
-                get() = queue.size
-
-            override fun isEmpty(): Boolean {
-                return queue.isEmpty()
-            }
-
-            override fun iterator(): Iterator<T> {
-                return queue.iterator()
-            }
-
-            override fun containsAll(elements: Collection<T>): Boolean {
-                return queue.containsAll(elements)
-            }
-
-            override fun contains(element: T): Boolean {
-                return queue.contains(element)
-            }
+            val relevantDestinations = valveMap.values.filter { it.flowRate > 0 }.toSet()
+            val relevantTravelTimes = travelTime.filter { relevantDestinations.contains(it.key) || it.key == start }
+                .mapValues { it.value.filter { it.value > 0 && relevantDestinations.contains(it.key) } }
+            return relevantTravelTimes
         }
 
+        private fun shortestPath2(
+            states: PriorityQueue<State3>,
+            relevantTravelTimes: Map<Valve, Map<Valve, Int>>
+        ): Int {
+            var best = -1
+            while (states.isNotEmpty()) {
+                val first = states.first()
+                states.remove(first)
+
+                if (first.minutesLeft < 1) {
+                    if (best < first.pressureReleased) {
+                        best = first.pressureReleased
+                        println(best)
+                    }
+                } else {
+                    var pressureReleased = first.pressureReleased
+                    val nextMissions = first.missions.map {
+                        if (it.finishedAt == first.minutesLeft) {
+                            pressureReleased += (it.finishedAt * it.vale.flowRate)
+                            val newMissions =
+                                relevantTravelTimes.getValue(it.vale)
+                                    .filterNot { it.key in first.openedValves }
+                                    .map { Mission(it.key, first.minutesLeft - it.value - 1) }
+                                    .filter { it.finishedAt >= 0 }
+                                    .toSet()
+                            newMissions
+                        } else {
+                            setOf(it)
+                        }
+                    }
+
+                    if (nextMissions.isNotEmpty() && nextMissions.get(0).isNotEmpty()) {
+                        for (n in nextMissions.get(0)) {
+                            val newMissionsToPair = nextMissions.getOrNull(1)
+                            if (newMissionsToPair != null) {
+                                for (m in newMissionsToPair) {
+                                    if (n.vale != m.vale) {
+                                        states.add(
+                                            State3(
+                                                setOf(n, m),
+                                                (first.openedValves + m.vale + n.vale),
+                                                pressureReleased,
+                                                Math.max(n.finishedAt, m.finishedAt)
+                                            )
+                                        )
+                                    }
+                                }
+                            } else {
+                                states.add(
+                                    State3(
+                                        setOf(n),
+                                        (first.openedValves + n.vale),
+                                        pressureReleased,
+                                        n.finishedAt
+                                    )
+                                )
+                            }
+                        }
+                    } else {
+                        states.add(
+                            State3(
+                                emptySet(),
+                                first.openedValves,
+                                pressureReleased,
+                                first.minutesLeft - 1
+                            )
+                        )
+                    }
+                }
+            }
+            return best
+        }
 
         private fun shortestPath(
             states: PriorityQueue<State2>,
@@ -219,6 +278,21 @@ class Puzzle16 {
             val newPosition: Valve,
             val openedValve: Valve?,
         )
+
+        data class Mission(val vale: Valve, val finishedAt: Int)
+
+        data class State3(
+            val missions: Set<Mission>, val openedValves: Set<Valve>, val pressureReleased: Int, val minutesLeft: Int
+        ) : Comparable<State3> {
+            override fun compareTo(other: State3): Int {
+                val diff = (other.pressureReleased - pressureReleased)
+                if (diff != 0) {
+                    return diff
+                } else {
+                    return (other.minutesLeft - minutesLeft)
+                }
+            }
+        }
 
         data class State2(
             val position: Set<Valve>, val openedValves: Set<Valve>, val pressureReleased: Int, val minutesLeft: Int
