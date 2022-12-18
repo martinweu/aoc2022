@@ -7,8 +7,6 @@ class Puzzle16 {
     class Part1 : Puzzle() {
         override fun solve(lines: List<String>): String {
             val valveMap = parseValves(lines)
-//            valveMap
-//                .mapValues { (k,v) -> Valve(v.code, v.flowRate, v.connections.map{ valveMap.getValue(it) }) }
 
             val queue = PriorityQueue<State>()
             val aa = valveMap.getValue("AA")
@@ -88,6 +86,56 @@ class Puzzle16 {
 
             return s.toString()
         }
+
+
+        class MyPriorityQueue<T : MyPriorityQueue.Companion.Element<K>, K> :
+            Collection<T> {
+            val queue: PriorityQueue<T> = PriorityQueue<T>()
+            val stateScores = mutableMapOf<K, MutableSet<T>>()
+
+            fun add(t: T) {
+                val currentScores = stateScores[t.key] ?: mutableSetOf()
+                currentScores.removeIf { t.isGreaterThanWithinSameKey(it) }
+                if (currentScores.all { !it.isGreaterThanWithinSameKey(t) }) {
+                    currentScores.add(t)
+                    queue.add(t)
+                }
+            }
+
+            fun pop(): T {
+                val a = queue.first()
+                //stateScores.getValue(a.key).remove(a)
+                queue.remove(a)
+                return a
+            }
+
+            companion object {
+                interface Element<K> {
+                    val key: K
+                    fun isGreaterThanWithinSameKey(other: Element<K>): Boolean
+                }
+            }
+
+            override val size: Int
+                get() = queue.size
+
+            override fun isEmpty(): Boolean {
+                return queue.isEmpty()
+            }
+
+            override fun iterator(): Iterator<T> {
+                return queue.iterator()
+            }
+
+            override fun containsAll(elements: Collection<T>): Boolean {
+                return queue.containsAll(elements)
+            }
+
+            override fun contains(element: T): Boolean {
+                return queue.contains(element)
+            }
+        }
+
 
         private fun shortestPath(
             states: PriorityQueue<State2>,
