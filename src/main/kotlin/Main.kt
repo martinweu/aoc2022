@@ -2,7 +2,7 @@ import org.apache.commons.io.FileUtils
 import puzzles.*
 import java.io.File
 
-val PUZZLE = Puzzle16.Part1()
+val PUZZLE = Puzzle19.Part2()
 
 fun main() {
    runFile("example")
