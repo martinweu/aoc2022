@@ -15,4 +15,8 @@ class Puzzle00 {
         }
 
     }
+    companion object
+    {
+
+    }
 }
