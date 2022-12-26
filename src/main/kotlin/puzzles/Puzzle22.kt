@@ -121,82 +121,127 @@ class Puzzle22 {
                 }
             }
 
-            var minimumY = map.filterValues { it == Tile.PATH }.keys.minOf { it.y }
-
-            var currentPosition = map.filterValues { it == Tile.PATH }.filterKeys { it.y == minimumY }.keys.minBy { it.x }
-            var currentDirection = Vector2D.RIGHT
-
+            // my input
             val areas = mapOf<Int, Area>(
-                1 to Area(Vector2D(2 * 50,0 * 50)),
-                2 to Area(Vector2D(1 * 50,0 * 50)),
-                3 to Area(Vector2D(1 * 50,1 * 50)),
-                4 to Area(Vector2D(1 * 50,2 * 50)),
-                5 to Area(Vector2D(0 * 50,2 * 50)),
-                6 to Area(Vector2D(0 * 50,3 * 50))
+                1 to Area(1, Vector2D(2 * SIDE_LENGTH, 0 * SIDE_LENGTH)),
+                2 to Area(2, Vector2D(1 * SIDE_LENGTH, 0 * SIDE_LENGTH)),
+                3 to Area(3, Vector2D(1 * SIDE_LENGTH, 1 * SIDE_LENGTH)),
+                4 to Area(4, Vector2D(1 * SIDE_LENGTH, 2 * SIDE_LENGTH)),
+                5 to Area(5, Vector2D(0 * SIDE_LENGTH, 2 * SIDE_LENGTH)),
+                6 to Area(6, Vector2D(0 * SIDE_LENGTH, 3 * SIDE_LENGTH))
             )
 
-            areas.getValue(1).neighbors = mapOf(
-                Matrix2D.ONE to areas.getValue(6),
-                Matrix2D.RIGHT_TO_RIGHT to areas.getValue(4),
-                Matrix2D.BOTTOM_TO_RIGHT to areas.getValue(3),
+            val adjacentSidesList = listOf(
+                AdjacentSides(areas.getValue(1), Vector2D.LEFT, areas.getValue(2), Vector2D.RIGHT),
+                AdjacentSides(areas.getValue(1), Vector2D.UP, areas.getValue(6), Vector2D.DOWN),
+                AdjacentSides(areas.getValue(1), Vector2D.RIGHT, areas.getValue(4), Vector2D.RIGHT),
+                AdjacentSides(areas.getValue(1), Vector2D.DOWN, areas.getValue(3), Vector2D.RIGHT),
+                AdjacentSides(areas.getValue(2), Vector2D.LEFT, areas.getValue(5), Vector2D.LEFT),
+                AdjacentSides(areas.getValue(2), Vector2D.UP, areas.getValue(6), Vector2D.LEFT),
+                AdjacentSides(areas.getValue(2), Vector2D.RIGHT, areas.getValue(1), Vector2D.LEFT),
+                AdjacentSides(areas.getValue(2), Vector2D.DOWN, areas.getValue(3), Vector2D.UP),
+                AdjacentSides(areas.getValue(3), Vector2D.LEFT, areas.getValue(5), Vector2D.UP),
+                AdjacentSides(areas.getValue(3), Vector2D.UP, areas.getValue(2), Vector2D.DOWN),
+                AdjacentSides(areas.getValue(3), Vector2D.RIGHT, areas.getValue(1), Vector2D.DOWN),
+                AdjacentSides(areas.getValue(3), Vector2D.DOWN, areas.getValue(4), Vector2D.UP),
+                AdjacentSides(areas.getValue(4), Vector2D.LEFT, areas.getValue(5), Vector2D.RIGHT),
+                AdjacentSides(areas.getValue(4), Vector2D.UP, areas.getValue(3), Vector2D.DOWN),
+                AdjacentSides(areas.getValue(4), Vector2D.RIGHT, areas.getValue(1), Vector2D.RIGHT),
+                AdjacentSides(areas.getValue(4), Vector2D.DOWN, areas.getValue(6), Vector2D.RIGHT),
+                AdjacentSides(areas.getValue(5), Vector2D.LEFT, areas.getValue(2), Vector2D.LEFT),
+                AdjacentSides(areas.getValue(5), Vector2D.UP, areas.getValue(3), Vector2D.LEFT),
+                AdjacentSides(areas.getValue(5), Vector2D.RIGHT, areas.getValue(4), Vector2D.LEFT),
+                AdjacentSides(areas.getValue(5), Vector2D.DOWN, areas.getValue(6), Vector2D.UP),
+                AdjacentSides(areas.getValue(6), Vector2D.LEFT, areas.getValue(2), Vector2D.UP),
+                AdjacentSides(areas.getValue(6), Vector2D.UP, areas.getValue(5), Vector2D.DOWN),
+                AdjacentSides(areas.getValue(6), Vector2D.RIGHT, areas.getValue(4), Vector2D.DOWN),
+                AdjacentSides(areas.getValue(6), Vector2D.DOWN, areas.getValue(1), Vector2D.UP),
             )
-            areas.getValue(2).neighbors = mapOf(
-               // Matrix2D.SWITCH_Y to areas.getValue(5),
-                Matrix2D.RIGHT_TO_RIGHT to areas.getValue(4),
-                Matrix2D.BOTTOM_TO_RIGHT to areas.getValue(3),
-            )
+            var currentArea = areas.getValue(2)
 
+            // example input
+//            val areas = mapOf<Int, Area>(
+//                1 to Area(1, Vector2D(2 * SIDE_LENGTH, 0 * SIDE_LENGTH)),
+//                2 to Area(2, Vector2D(0 * SIDE_LENGTH, 1 * SIDE_LENGTH)),
+//                3 to Area(3, Vector2D(1 * SIDE_LENGTH, 1 * SIDE_LENGTH)),
+//                4 to Area(4, Vector2D(2 * SIDE_LENGTH, 1 * SIDE_LENGTH)),
+//                5 to Area(5, Vector2D(2 * SIDE_LENGTH, 2 * SIDE_LENGTH)),
+//                6 to Area(6, Vector2D(3 * SIDE_LENGTH, 2 * SIDE_LENGTH))
+//            )
+//
+//            val adjacentSidesList = listOf(
+//                AdjacentSides(areas.getValue(1), Vector2D.LEFT, areas.getValue(3), Vector2D.UP),
+//                AdjacentSides(areas.getValue(1), Vector2D.UP, areas.getValue(2), Vector2D.UP),
+//                AdjacentSides(areas.getValue(1), Vector2D.RIGHT, areas.getValue(6), Vector2D.RIGHT),
+//                AdjacentSides(areas.getValue(1), Vector2D.DOWN, areas.getValue(4), Vector2D.UP),
+//                AdjacentSides(areas.getValue(2), Vector2D.LEFT, areas.getValue(6), Vector2D.DOWN),
+//                AdjacentSides(areas.getValue(2), Vector2D.UP, areas.getValue(1), Vector2D.UP),
+//                AdjacentSides(areas.getValue(2), Vector2D.RIGHT, areas.getValue(3), Vector2D.LEFT),
+//                AdjacentSides(areas.getValue(2), Vector2D.DOWN, areas.getValue(5), Vector2D.DOWN),
+//                AdjacentSides(areas.getValue(3), Vector2D.LEFT, areas.getValue(2), Vector2D.RIGHT),
+//                AdjacentSides(areas.getValue(3), Vector2D.UP, areas.getValue(1), Vector2D.LEFT),
+//                AdjacentSides(areas.getValue(3), Vector2D.RIGHT, areas.getValue(4), Vector2D.LEFT),
+//                AdjacentSides(areas.getValue(3), Vector2D.DOWN, areas.getValue(5), Vector2D.LEFT),
+//                AdjacentSides(areas.getValue(4), Vector2D.LEFT, areas.getValue(3), Vector2D.RIGHT),
+//                AdjacentSides(areas.getValue(4), Vector2D.UP, areas.getValue(1), Vector2D.DOWN),
+//                AdjacentSides(areas.getValue(4), Vector2D.RIGHT, areas.getValue(6), Vector2D.UP),
+//                AdjacentSides(areas.getValue(4), Vector2D.DOWN, areas.getValue(5), Vector2D.UP),
+//                AdjacentSides(areas.getValue(5), Vector2D.LEFT, areas.getValue(3), Vector2D.DOWN),
+//                AdjacentSides(areas.getValue(5), Vector2D.UP, areas.getValue(4), Vector2D.DOWN),
+//                AdjacentSides(areas.getValue(5), Vector2D.RIGHT, areas.getValue(6), Vector2D.LEFT),
+//                AdjacentSides(areas.getValue(5), Vector2D.DOWN, areas.getValue(2), Vector2D.DOWN),
+//                AdjacentSides(areas.getValue(6), Vector2D.LEFT, areas.getValue(5), Vector2D.RIGHT),
+//                AdjacentSides(areas.getValue(6), Vector2D.UP, areas.getValue(4), Vector2D.RIGHT),
+//                AdjacentSides(areas.getValue(6), Vector2D.RIGHT, areas.getValue(1), Vector2D.RIGHT),
+//                AdjacentSides(areas.getValue(6), Vector2D.DOWN, areas.getValue(2), Vector2D.LEFT),
+//            )
+//            var currentArea = areas.getValue(1)
+
+            val adjacentSides = adjacentSidesList.groupBy { it.areaA }.mapValues { it.value.associateBy { it.sideA } }
+
+            for(adsl in adjacentSidesList) {
+                val c = adjacentSides.getValue(adsl.areaB).getValue(adsl.sideB)
+                check(c.areaB == adsl.areaA)
+                check(c.sideB == adsl.sideA)
+            }
+
+
+
+            areas.forEach { it.value.neighbors = adjacentSides.getValue(it.value) }
+
+            var currentPosition = Vector2D(0, 0)
+            var currentDirection = Vector2D.RIGHT
 
 
             for (s in steps) {
                 for (i in 0 until s.count) {
                     var nextPos = currentPosition + currentDirection
-                    var nextTile = map.getOrDefault(nextPos, Tile.VOID)
+                    var nextArea = currentArea
+                    var nextDirection = currentDirection
 
-                    if (nextTile == Tile.VOID) {
-
-                        if(100 <= currentPosition.x && currentPosition.x < 150 && 0 <= currentPosition.y && currentPosition.y< 100)
-                        {
-
-                            //Tile 1 Bottom
-                            if(nextPos.y < 0){
-                                nextPos = Vector2D( 50 - nextPos.x - 2 * 50, nextPos.y + 4 * 50 )
-                            }
-                            //Tile 1 Bottom
-                            if(nextPos.x > 150 ){
-                                nextPos = Vector2D( 50 - nextPos.x - 2 * 50, 150 - nextPos.y)
-                            }
-                        }
-
-                        val searchDirection = currentDirection * -1
-                        var currentSearchPos = nextPos
-                        while (true) {
-                            val nextSearchPos = currentSearchPos + searchDirection
-                            val nextSearchTile = map.getOrDefault(nextSearchPos, Tile.VOID)
-                            if (nextSearchTile == Tile.VOID) {
-                                break;
-                            }
-                            currentSearchPos = nextSearchPos
-                        }
-                        nextPos = currentSearchPos
-                        nextTile = map.getOrDefault(nextPos, Tile.VOID)
+                    if (nextPos.x < 0 || nextPos.y < 0 || nextPos.x >= SIDE_LENGTH || nextPos.y >= SIDE_LENGTH) {
+                        val newArea = currentArea.neighbors.getValue(currentDirection)
+                        nextPos = newArea.movePositionFromAtoB(currentPosition)
+                        nextDirection = newArea.getDirectionFromAtoB()
+                        nextArea = newArea.areaB
                     }
+
+                    var nextTile = map.getValue(nextArea.start + nextPos)
 
 
                     if (nextTile == Tile.WALL) {
                         break;
                     }
-                    else if (nextTile == Tile.VOID) {
-                        println("error")
-                    }
-
+                    currentDirection = nextDirection
                     currentPosition = nextPos
+                    currentArea = nextArea
                 }
                 currentDirection = currentDirection.turn(s.direction)
             }
 
-            val dirVal = when(currentDirection)
-            {
+            currentPosition = currentArea.start + currentPosition
+
+            val dirVal = when (currentDirection) {
                 Vector2D.RIGHT -> 0
                 Vector2D.DOWN -> 1
                 Vector2D.LEFT -> 2
@@ -204,18 +249,58 @@ class Puzzle22 {
                 else -> throw RuntimeException("")
             }
 
-            return ((currentPosition.y+1) * 1000 + (currentPosition.x+1) * 4 + dirVal).toString()
+            return ((currentPosition.y + 1) * 1000 + (currentPosition.x + 1) * 4 + dirVal).toString()
         }
 
     }
 
     companion object {
 
-        data class Area(val start : Vector2D,var neighbors: Map<Matrix2D, Area> = emptyMap())
-        {
-            fun isOnArea(v: Vector2D)
-            {
-             //TODO
+        val SIDE_LENGTH = 50
+        val MAX_SIDE = SIDE_LENGTH -1
+
+        data class AdjacentSides(val areaA: Area, val sideA: Vector2D, val areaB: Area, val sideB: Vector2D) {
+            fun movePositionFromAtoB(lastOnAreaAPosition: Vector2D): Vector2D {
+
+                val oldCoordinate = if (sideA == Vector2D.LEFT || sideA == Vector2D.RIGHT) {
+                    lastOnAreaAPosition.y
+                } else {
+                    lastOnAreaAPosition.x
+                }
+
+                val sideset = setOf(sideA,sideB)
+                val newOldCoordinate =
+                    if (sideset.size == 1 || sideset == setOf(Vector2D.RIGHT, Vector2D.UP) || sideset == setOf(Vector2D.LEFT, Vector2D.DOWN)) {
+                        MAX_SIDE - oldCoordinate
+                    } else {
+                    oldCoordinate
+                    }
+
+
+                if (sideB == Vector2D.LEFT) {
+                    return Vector2D(0, newOldCoordinate)
+                } else if (sideB == Vector2D.UP) {
+                    return Vector2D(newOldCoordinate, 0)
+                } else if (sideB == Vector2D.RIGHT) {
+                    return Vector2D(MAX_SIDE, newOldCoordinate)
+                } else if (sideB == Vector2D.DOWN) {
+                    return Vector2D(newOldCoordinate, MAX_SIDE)
+                } else {
+                    throw RuntimeException("error")
+                }
+            }
+
+            fun getDirectionFromAtoB(): Vector2D {
+                return Vector2D.ZERO - sideB
+            }
+        }
+        data class Area(
+            val id: Int,
+            val start: Vector2D,
+            var neighbors: Map<Vector2D, AdjacentSides> = mutableMapOf()
+        ) {
+            override fun toString(): String {
+                return "Area(id=$id, start=$start)"
             }
         }
 
@@ -238,38 +323,6 @@ class Puzzle22 {
 
         }
 
-        data class Matrix2D(val a : Int, val b : Int, val c : Int, val d: Int)  {
-            operator fun times(v: Vector2D): Vector2D {
-                return Vector2D(a * v.x + b * v.y,c * v.x + d * v.y)
-            }
-            operator fun times(v: Matrix2D): Matrix2D {
-                return Matrix2D(a * v.a + b * v.c, a*v.b + b * v.d, c*v.a + d * v.c, c * v.b + d * v.d)
-            }
-
-            companion object
-            {
-                val ONE = Matrix2D(1,0,0,1)
-//                val SWITCH_X = Matrix2D(-1,0,0,1)
-//                val SWITCH_Y = Matrix2D(1,0,0,-1)
-
-                val ROTATE_RIGHT = Matrix2D(0,1,-1,0)
-                val ROTATE_LEFT = Matrix2D(0,-1,1,0)
-                val ROTATE_180 = ROTATE_LEFT  * ROTATE_LEFT
-
-
-                val LEFT_TO_LEFT = ROTATE_180
-                val RIGHT_TO_RIGHT = ROTATE_180
-
-                val RIGHT_TO_TOP = ROTATE_RIGHT
-                val RIGHT_TO_BOTTOM = ROTATE_LEFT
-
-                val LEFT_TO_TOP = ROTATE_LEFT
-                val LEFT_TO_BOTTOM = ROTATE_RIGHT
-
-                val BOTTOM_TO_RIGHT = ROTATE_RIGHT
-            }
-
-        }
 
         data class Step(val count: Int, val direction: Char)
         data class Vector2D(val x: Int, val y: Int) {
@@ -315,6 +368,7 @@ class Puzzle22 {
             }
 
             companion object {
+                val ZERO = Vector2D(0, 0)
                 val LEFT = Vector2D(-1, 0)
                 val UP = Vector2D(0, -1)
                 val RIGHT = Vector2D(1, 0)
