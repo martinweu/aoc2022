@@ -82,10 +82,10 @@ class Puzzle16 {
             val aa = valveMap.getValue("AA")
             val relevantTravelTimes = calculateTravelTimes(valveMap, aa)
 
-            val queue = PriorityQueue<State3>()
-//            queue.add(State3(setOf(Mission(aa,26), Mission(aa,26)), emptySet(), 0, 26))
-            queue.add(State3(setOf(Mission(aa, 30)), emptySet(), 0, 30))
-            val s = shortestPath2(queue, relevantTravelTimes)
+
+            val initialState = State3(listOf(Mission(aa, 26), Mission(aa, 26)), emptySet(), 0, 26)
+//            queue.add(State3(setOf(Mission(aa, 30)), emptySet(), 0, 30))
+            val s = shortestPath2(initialState, relevantTravelTimes)
 
             return s.toString()
         }
@@ -124,33 +124,37 @@ class Puzzle16 {
         }
 
         private fun shortestPath2(
-            states: PriorityQueue<State3>,
+            initialState: State3,
             relevantTravelTimes: Map<Valve, Map<Valve, Int>>
         ): Int {
+            val states= PriorityQueue<State3>()
+            val visited = mutableSetOf<Int>()
+            states.add(initialState)
+            visited.add(initialState.hashCode())
             var best = -1
             while (states.isNotEmpty()) {
-                val first = states.first()
-                states.remove(first)
+                val current = states.first()
+                states.remove(current)
 
-                if (first.minutesLeft < 1) {
-                    if (best < first.pressureReleased) {
-                        best = first.pressureReleased
+                if (current.minutesLeft < 1) {
+                    if (best < current.pressureReleased) {
+                        best = current.pressureReleased
                         println(best)
                     }
                 } else {
-                    var pressureReleased = first.pressureReleased
-                    val nextMissions = first.missions.map {
-                        if (it.finishedAt == first.minutesLeft) {
+                    var pressureReleased = current.pressureReleased
+                    val nextMissions = current.missions.map {
+                        if (it.finishedAt == current.minutesLeft) {
                             pressureReleased += (it.finishedAt * it.vale.flowRate)
                             val newMissions =
                                 relevantTravelTimes.getValue(it.vale)
-                                    .filterNot { it.key in first.openedValves }
-                                    .map { Mission(it.key, first.minutesLeft - it.value - 1) }
+                                    .filterNot { it.key in current.openedValves }
+                                    .map { Mission(it.key, current.minutesLeft - it.value - 1) }
                                     .filter { it.finishedAt >= 0 }
                                     .toSet()
                             newMissions
                         } else {
-                            setOf(it)
+                            listOf(it)
                         }
                     }
 
@@ -160,36 +164,56 @@ class Puzzle16 {
                             if (newMissionsToPair != null) {
                                 for (m in newMissionsToPair) {
                                     if (n.vale != m.vale) {
-                                        states.add(
-                                            State3(
-                                                setOf(n, m),
-                                                (first.openedValves + m.vale + n.vale),
-                                                pressureReleased,
-                                                Math.max(n.finishedAt, m.finishedAt)
-                                            )
+                                        val newState = State3(
+                                            listOf(n, m).sortedBy { it.vale.code },
+                                            (current.openedValves + m.vale + n.vale),
+                                            pressureReleased,
+                                            Math.max(n.finishedAt, m.finishedAt)
                                         )
+                                        if (!visited.contains(newState.hashCode())) {
+                                            states.add(newState)
+                                            visited.add(newState.hashCode())
+                                        }
                                     }
                                 }
-                            } else {
-                                states.add(
-                                    State3(
-                                        setOf(n),
-                                        (first.openedValves + n.vale),
+                                if(newMissionsToPair.size == 1 && nextMissions.get(0).size == 1 && newMissionsToPair.first().vale == nextMissions.get(0).first().vale)
+                                {
+                                    val n = nextMissions.get(0).first()
+                                    val newState = State3(
+                                        listOf(n).sortedBy { it.vale.code },
+                                        (current.openedValves + n.vale),
                                         pressureReleased,
                                         n.finishedAt
                                     )
+                                    if (!visited.contains(newState.hashCode())) {
+                                        states.add(newState)
+                                        visited.add(newState.hashCode())
+                                    }
+                                }
+                            } else {
+                                val newState = State3(
+                                    listOf(n),
+                                    (current.openedValves + n.vale),
+                                    pressureReleased,
+                                    n.finishedAt
                                 )
+                                if (!visited.contains(newState.hashCode())) {
+                                    states.add(newState)
+                                    visited.add(newState.hashCode())
+                                }
                             }
                         }
                     } else {
-                        states.add(
-                            State3(
-                                emptySet(),
-                                first.openedValves,
-                                pressureReleased,
-                                first.minutesLeft - 1
-                            )
+                        val newState = State3(
+                            emptyList(),
+                            current.openedValves,
+                            pressureReleased,
+                            current.minutesLeft - 1
                         )
+                        if (!visited.contains(newState.hashCode())) {
+                            states.add(newState)
+                            visited.add(newState.hashCode())
+                        }
                     }
                 }
             }
@@ -282,7 +306,7 @@ class Puzzle16 {
         data class Mission(val vale: Valve, val finishedAt: Int)
 
         data class State3(
-            val missions: Set<Mission>, val openedValves: Set<Valve>, val pressureReleased: Int, val minutesLeft: Int
+            val missions: List<Mission>, val openedValves: Set<Valve>, val pressureReleased: Int, val minutesLeft: Int
         ) : Comparable<State3> {
             override fun compareTo(other: State3): Int {
                 val diff = (other.pressureReleased - pressureReleased)

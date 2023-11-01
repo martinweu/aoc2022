@@ -1,20 +1,31 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.7.21"
+    kotlin("jvm") version "1.9.20"
     application
 }
 
 group = "org.example"
 version = "1.0-SNAPSHOT"
 
-repositories {
-    mavenCentral()
+allprojects {
+    repositories {
+        mavenCentral()
+    }
 }
 
-dependencies {
-    implementation("commons-io:commons-io:2.11.0")
-    testImplementation(kotlin("test"))
+subprojects {
+    apply(plugin = "kotlin")
+//    repositories {
+//        mavenCentral()
+//    }
+    dependencies {
+        implementation("commons-io:commons-io:2.15.0")
+        testImplementation(kotlin("test"))
+        if(name.startsWith("day")) {
+            implementation(project(":core"))
+        }
+    }
 }
 
 tasks.test {
@@ -22,7 +33,7 @@ tasks.test {
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.jvmTarget = "21"
 }
 
 application {

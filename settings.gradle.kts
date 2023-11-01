@@ -1,3 +1,4 @@
+rootProject.name = "aoc2023"
 
-rootProject.name = "aoc2022"
-
+include("core")
+include("day01")
