@@ -1,8 +1,8 @@
 import org.apache.commons.io.FileUtils
-import puzzles.*
+import puzzlesNew.*
 import java.io.File
 
-val PUZZLE = Puzzle22.Part2()
+val PUZZLE = Puzzle00.Part1()
 
 fun main() {
 //   runFile("example")
